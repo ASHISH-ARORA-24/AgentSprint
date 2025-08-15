@@ -1,3 +1,10 @@
+# Progress Update (August 15, 2025)
+
+- Created `clients/` folder for client-specific Terraform variable files
+- Added example `abc.tfvars` for client configuration
+- Updated root `README.md` to document usage of tfvars and correct relative path
+- Verified Terraform workflow: init, plan, apply with service principal authentication
+- Resource groups successfully created in Azure
 # Progress Tracker
 
 This file tracks the progress of tasks from the target plan. Update this file as you complete steps or add notes, blockers, and references to images.
