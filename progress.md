@@ -14,3 +14,7 @@ This file tracks the progress of tasks from the target plan. Update this file as
 *Start logging your progress below:*
 
 - [x] Terraform installed ([see setup steps](initial_setup/terraform.txt))
+- [x] Azure Service Principal created: `sp-abc-agentsprint-terraform` (Contributor on subscription)
+  - Used for client 'abc' and project 'AgentSprint'
+  - Scope: /subscriptions/<subscription_id>
+  - Credentials stored for Terraform authentication ([see details](initial_setup/azure.md))
