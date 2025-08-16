@@ -1,3 +1,4 @@
+/iac/terraform/.terraform/
 scripts/deploy.sh
 scripts/cleanup.sh
 cleanup.sh
