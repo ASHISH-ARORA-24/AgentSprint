@@ -1,3 +1,24 @@
+# Terraform
+/.terraform/
+/iac/terraform/.terraform/
+*.tfstate
+*.tfstate.backup
+crash.log
+*.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Scripts
+/scripts/deploy.sh
+/scripts/cleanup.sh
 /iac/terraform/.terraform/
 scripts/deploy.sh
 scripts/cleanup.sh
