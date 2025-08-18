@@ -13,12 +13,12 @@
 - **Resource Groups:** `rg-abc-net`, `rg-abc-core`, `rg-abc-runner`
 - **VNet:** `vnet-abc`
 - **Subnets:**
-	- `subnet-rns` `10.0.2.0/26`
-	- `subnet-runners` `10.0.1.0/24`
+	- `subnet-agt` `10.0.2.0/26`
+	- `subnet-agents` `10.0.1.0/24`
 	- `subnet-jump` `10.0.3.0/28`
-- **NSGs:** `nsg-abc-rns`, `nsg-abc-runners`, `nsg-abc-jump`
+- **NSGs:** `nsg-abc-agt`, `nsg-abc-agents`, `nsg-abc-jump`
 - **Tags (every resource):**
-	- `project=RNS`
+	- `project=AGT`
 	- `client=abc`
 	- `env=dev`
 	- `owner=<you>`
@@ -26,15 +26,15 @@
 ### 0.3 Access/RBAC Setup
 
 - Your admin account: Owner or Contributor at subscription/RG.
-- Create two Entra groups: `rns-ops`, `rns-viewers`.
+- Create two Entra groups: `agt-ops`, `agt-viewers`.
 - Assign:
-	- `rns-ops` = Contributor on `rg-abc-*`
-	- `rns-viewers` = Reader
+	- `agt-ops` = Contributor on `rg-abc-*`
+	- `agt-viewers` = Reader
 
 ### 0.4 Git Repos
 
 - **Repo A (IaC):** `/iac` (Terraform or Bicep)
-- **Repo B (Functions + RNS stubs):** `/rns-system`
+- **Repo B (Functions + AGT stubs):** `/agt-system`
 - Setup CI for `terraform fmt/validate/plan` on PR.
 
 **Milestone:** Foundations done ✅
@@ -50,16 +50,16 @@
 ### 1.2 VNet + Subnets (`10.0.0.0/16`)
 
 - `vnet-abc`
-- `subnet-runners` `10.0.1.0/24`
-- `subnet-rns` `10.0.2.0/26`
+- `subnet-agents` `10.0.1.0/24`
+- `subnet-agt` `10.0.2.0/26`
 - `subnet-jump` `10.0.3.0/28`
 
 ### 1.3 NSGs & Rules
 
-- **runners (`nsg-abc-runners`)** → attach to `subnet-runners`
+- **agents (`nsg-abc-agents`)** → attach to `subnet-agents`
 	- Inbound: Deny VirtualNetwork→VirtualNetwork, priority 100.
 	- Outbound: allow to `10.0.2.0/26` (80/443), allow to internet (default).
-- **rns (`nsg-abc-rns`)** → attach to `subnet-rns`
+- **agt (`nsg-abc-agt`)** → attach to `subnet-agt`
 	- Inbound: allow from `10.0.1.0/24` (80/443), p=100.
 	- Inbound: allow from `10.0.3.0/28` (22), p=110.
 	- Inbound: explicit Deny all, p=200.
@@ -96,16 +96,16 @@
 
 - Will use System-assigned MI on:
 	- Function App (later)
-	- RNS VM (later)
+	- AGT VM (later)
 
 ### 2.4 RBAC (least privilege)
 
 - **Functions MI:**
 	- KV: Key Vault Secrets User
 	- Storage Queue: Storage Queue Data Contributor (webhook sends; idle/tokens may peek/recv)
-	- Compute: custom role or Virtual Machine Contributor on `rg-abc-core` (start/deallocate RNS)
+	- Compute: custom role or Virtual Machine Contributor on `rg-abc-core` (start/deallocate AGT)
 	- Network: Network Contributor on `rg-abc-net` (create/delete NAT, subnet update)
-- **RNS VM MI:**
+- **AGT VM MI:**
 	- KV: Key Vault Secrets User
 	- Storage Queue: Storage Queue Data Contributor (recv/process webhooks)
 	- (Later) Compute on `rg-abc-runner` for creating runner VMs
@@ -123,11 +123,11 @@
 - Add App Settings:
 	- `QUEUE_NAME=gh-webhooks`
 	- `IDLE_MINUTES=30`
-	- `RNS_VM_RG=rg-abc-core`
-	- `RNS_VM_NAME=vm-abc-rns`
+	- `AGT_VM_RG=rg-abc-core`
+	- `AGT_VM_NAME=vm-abc-agt`
 	- `VNET_RG=rg-abc-net`
 	- `VNET_NAME=vnet-abc`
-	- `RUNNERS_SUBNET=subnet-runners`
+	- `agents_SUBNET=subnet-agents`
 	- `NAT_NAME=natg-abc`
 	- `STATIC_PIP_NAME=pip-abc-nat`
 	- (KV references for GH secrets if you prefer)
@@ -147,11 +147,11 @@
 
 ---
 
-## 4. RNS Host VM (skeleton only)
+## 4. AGT Host VM (skeleton only)
 
-### 4.1 Create RNS VM (`rg-abc-core`)
+### 4.1 Create AGT VM (`rg-abc-core`)
 
-- Size: start with B1ms; no public IP; NIC in `subnet-rns`
+- Size: start with B1ms; no public IP; NIC in `subnet-agt`
 - System-assigned MI enabled.
 - (If size supports) Ephemeral OS disk enabled.
 
@@ -159,14 +159,14 @@
 
 - Install Python 3.11, uvicorn, fastapi, Azure SDKs, azure-storage-queue.
 - Create a minimal FastAPI app with `/healthz` returning 200.
-- Create a queue consumer service that pulls `gh-webhooks` and writes logs to `/var/log/rns-queue.log`.
-- systemd units: `rns-api.service`, `rns-worker.service`
+- Create a queue consumer service that pulls `gh-webhooks` and writes logs to `/var/log/agt-queue.log`.
+- systemd units: `agt-api.service`, `agt-worker.service`
 
 ### 4.3 Connectivity Test
 
-- Manually create a temporary jump host (or assign temp PIP) → SSH into RNS; confirm `/healthz` and queue pull.
+- Manually create a temporary jump host (or assign temp PIP) → SSH into AGT; confirm `/healthz` and queue pull.
 
-**Milestone:** RNS VM reachable privately; worker can read queue ✅
+**Milestone:** AGT VM reachable privately; worker can read queue ✅
 
 ---
 
@@ -179,7 +179,7 @@
 
 ### 5.2 Send a Test Webhook
 
-- Expect: Function 202 → Queue receives message → RNS worker logs it.
+- Expect: Function 202 → Queue receives message → AGT worker logs it.
 
 **Milestone:** First end-to-end event flows successfully ✅
 
@@ -191,10 +191,10 @@
 
 - `create_or_attach_nat`:
 	- If `natg-abc` missing → create (attach `pip-abc-nat`)
-	- Associate to `subnet-runners`
-- `start_rns_vm_if_needed`:
-	- If `vm-abc-rns` powerState != running → Start
-- Optional: `wait_rns_ready`: poll VM instanceView or call `http://rns:80/healthz` (if reachable) with backoff.
+	- Associate to `subnet-agents`
+- `start_agt_vm_if_needed`:
+	- If `vm-abc-agt` powerState != running → Start
+- Optional: `wait_agt_ready`: poll VM instanceView or call `http://agt:80/healthz` (if reachable) with backoff.
 
 ### 6.2 Make HTTP Webhook Do Enqueue First, Then EnsureInfra
 
@@ -203,18 +203,18 @@
 ### 6.3 Implement idle_killer (Timer Function, every 5–10 min)
 
 - If `gh-webhooks` length == 0 and last_activity ≥ 30m:
-	- Deallocate RNS VM
+	- Deallocate AGT VM
 	- Detach NAT (update subnet) and Delete `natg-abc` (keep `pip-abc-nat`)
 
 ### 6.4 Race Safety
 
-- Durable instance ID: fixed per client (e.g., `ensure-rns-abc`) → platform guarantees single instance.
-- (Alternative: blob lease lock `rns-start-lock`)
+- Durable instance ID: fixed per client (e.g., `ensure-agt-abc`) → platform guarantees single instance.
+- (Alternative: blob lease lock `agt-start-lock`)
 
 ### 6.5 Test Cold Path
 
-- Manually deallocate RNS + delete NAT.
-- Trigger webhook: verify NAT created, associated; RNS started; message processed.
+- Manually deallocate AGT + delete NAT.
+- Trigger webhook: verify NAT created, associated; AGT started; message processed.
 
 **Milestone:** Always-hibernation flow works reliably ✅
 
@@ -247,13 +247,13 @@
 
 ### 8.2 Function: eviction_receiver (HTTP)
 
-- Runners call on eviction → enqueue message `evictions` → (later) RNS handles replacement
+- agents call on eviction → enqueue message `evictions` → (later) AGT handles replacement
 
 **Milestone:** Both glue endpoints respond and log ✅
 
 ---
 
-## 9. Images & Runners (Prepare; minimal now)
+## 9. Images & agents (Prepare; minimal now)
 
 ### 9.1 Azure Compute Gallery
 
@@ -263,8 +263,8 @@
 
 ### 9.2 (Optional now) VMSS Skeleton
 
-- Create VMSS (Spot) in `subnet-runners` (disabled by default)
-- RNS will eventually use SDK to scale instances per job queue
+- Create VMSS (Spot) in `subnet-agents` (disabled by default)
+- AGT will eventually use SDK to scale instances per job queue
 
 **Milestone:** Image gallery online; runner base path ready ✅
 
@@ -293,4 +293,4 @@
 
 ---
 
-## 11. Go/No-Go Checklist (Pre-RNS Code)
+## 11. Go/No-Go Checklist (Pre-AGT Code)

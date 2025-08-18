@@ -1,6 +1,6 @@
 # Terraform
 /.terraform/
-/iac/terraform/.terraform/
+/iac/terraform/azure/.terraform/
 *.tfstate
 *.tfstate.backup
 crash.log

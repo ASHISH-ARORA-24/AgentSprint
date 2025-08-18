@@ -5,7 +5,7 @@ This project uses three main resource groups for organizing Azure resources:
 | Resource Group         | Purpose/Resources Placed Here                |
 |-----------------------|----------------------------------------------|
 | rg-<client_code>-net  | Networking resources: VNet, subnets, NSGs, jump host, public IPs |
-| rg-<client_code>-core | Core services: Storage Account, Key Vault, Function Apps, RNS VM |
+| rg-<client_code>-core | Core services: Storage Account, Key Vault, Function Apps, Agent Sprint VM |
 | rg-<client_code>-agent| Agent VMs, VMSS, Compute Gallery, agent-related infrastructure |
 
 **Jump Host:**

@@ -7,15 +7,16 @@ clients/abc.tfvars
 clients/xyz.tfvars
 ```
 
-To deploy for a specific client, run Terraform from the `iac/terraform` directory and use:
+To deploy for a specific client, run Terraform from the `iac/terraform/azure` directory and use:
 ```bash
-terraform apply -var-file="../clients/abc.tfvars"
+terraform apply -var-file="../../clients/abc.tfvars"
 ```
 
 Update or add new `.tfvars` files in `clients/` for each client as needed.
+
 # Quickstart: Azure & Terraform Commands
 
-To deploy infrastructure, use the following workflow:
+To deploy Azure infrastructure, use the following workflow (from `iac/terraform/azure`):
 
 1. Export Azure service principal credentials:
 	```bash
@@ -42,27 +43,39 @@ To deploy infrastructure, use the following workflow:
 
 5. Preview changes:
 	```bash
-	terraform plan
+	terraform plan -var-file="../../clients/abc.tfvars"
 	```
 
 6. Apply changes:
 	```bash
-	terraform apply
+	terraform apply -var-file="../../clients/abc.tfvars"
 	```
 
 This sequence ensures proper authentication and deployment of resources. Update credentials as needed for your environment.
-# Resource Group Overview
+
+# Multi-Cloud Structure
+
+Terraform code for each cloud provider is organized in its own subfolder:
+
+- `/iac/terraform/azure/` for Azure
+- `/iac/terraform/aws/` for AWS (future)
+- `/iac/terraform/gcp/` for GCP (future)
+
+General documentation and onboarding remain at the root or in `/iac/terraform/`.
+
+# Resource Group Overview (Azure)
 
 This project organizes Azure resources into three main resource groups for clarity and maintainability:
 
 | Resource Group         | Purpose/Resources Placed Here                |
 |-----------------------|----------------------------------------------|
 | rg-<client_code>-net  | Networking resources: VNet, subnets, NSGs, jump host, public IPs |
-| rg-<client_code>-core | Core services: Storage Account, Key Vault, Function Apps, RNS VM |
+| rg-<client_code>-core | Core services: Storage Account, Key Vault, Function Apps, Agent Sprint VM |
 | rg-<client_code>-agent| Agent VMs, VMSS, Compute Gallery, agent-related infrastructure |
 
 **Jump Host:**
 - The jump host should be created in `rg-<client_code>-net` as it is a network-related resource and may require access to subnets, NSGs, and public IPs.
 
 This structure keeps networking, core services, and agent infrastructure cleanly separated for easier management and access control.
+
 # AgentSprint
