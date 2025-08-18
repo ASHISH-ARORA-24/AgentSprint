@@ -73,17 +73,100 @@
 
 **Milestone:** VNet/NSGs/PIP online; Effective rules look correct ✅
 
----
 
-## 2. Core PaaS (Queues, Vault) + Identities
+**agents (`nsg-abc-agents`)** → attach to `subnet-agents`
+	security_rule {
+		name                       = "deny-vnet-inbound"
+		priority                   = 100
+		direction                  = "Inbound"
+		access                     = "Deny"
+		protocol                   = "*"
+		source_port_range          = "*"
+		destination_port_range     = "*"
+		source_address_prefix      = "VirtualNetwork"
+		destination_address_prefix = "VirtualNetwork"
+	}
+	security_rule {
+		name                       = "allow-agents-http-https"
+		priority                   = 110
+		direction                  = "Outbound"
+		access                     = "Allow"
+		protocol                   = "Tcp"
+		source_port_range          = "*"
+		destination_port_range     = "80,443"
+		source_address_prefix      = "*"
+		destination_address_prefix = "10.0.2.0/26"
+	}
+	security_rule {
+		name                       = "allow-internet-outbound"
+		priority                   = 120
+		direction                  = "Outbound"
+		access                     = "Allow"
+		protocol                   = "*"
+		source_port_range          = "*"
+		destination_port_range     = "*"
+		source_address_prefix      = "*"
+		destination_address_prefix = "Internet"
+	}
 
-### 2.1 Storage Account (`rg-abc-core`)
+**agt (`nsg-abc-agt`)** → attach to `subnet-agt`
+	security_rule {
+		name                       = "allow-agt-http-https"
+		priority                   = 100
+		direction                  = "Inbound"
+		access                     = "Allow"
+		protocol                   = "Tcp"
+		source_port_range          = "*"
+		destination_port_range     = "80,443"
+		source_address_prefix      = "10.0.1.0/24"
+		destination_address_prefix = "*"
+	}
+	security_rule {
+		name                       = "allow-jump-ssh"
+		priority                   = 110
+		direction                  = "Inbound"
+		access                     = "Allow"
+		protocol                   = "Tcp"
+		source_port_range          = "*"
+		destination_port_range     = "22"
+		source_address_prefix      = "10.0.3.0/28"
+		destination_address_prefix = "*"
+	}
+	security_rule {
+		name                       = "deny-all-inbound"
+		priority                   = 200
+		direction                  = "Inbound"
+		access                     = "Deny"
+		protocol                   = "*"
+		source_port_range          = "*"
+		destination_port_range     = "*"
+		source_address_prefix      = "*"
+		destination_address_prefix = "*"
+	}
 
-- **Queues:** `gh-webhooks`, `evictions`
-- **Blobs:** `logs/` (for cheap JSON logs)
-- SAS disabled; use Managed Identity (MI) later.
-
-### 2.2 Key Vault (`rg-abc-core`)
+**jump (`nsg-abc-jump`)** → attach to `subnet-jump`
+	security_rule {
+		name                       = "allow-admin-ssh"
+		priority                   = 100
+		direction                  = "Inbound"
+		access                     = "Allow"
+		protocol                   = "Tcp"
+		source_port_range          = "*"
+		destination_port_range     = "22"
+		source_address_prefix      = "<your-public-ip>/32"
+		destination_address_prefix = "*"
+	}
+	security_rule {
+		name                       = "deny-all-inbound"
+		priority                   = 200
+		direction                  = "Inbound"
+		access                     = "Deny"
+		protocol                   = "*"
+		source_port_range          = "*"
+		destination_port_range     = "*"
+		source_address_prefix      = "*"
+		destination_address_prefix = "*"
+	}
 
 - **Secrets to add (placeholders now if needed):**
 	- `GH_APP_ID`
