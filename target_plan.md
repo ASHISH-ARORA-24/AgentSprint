@@ -67,13 +67,6 @@
 	- Inbound: allow TCP 22 from your public IP/32, p=100.
 	- Inbound: deny all, p=200.
 
-### 1.4 Static Public IP (for NAT reuse)
-
-- Create `pip-abc-nat` (Standard, Static). (Keep forever; cheap; preserves allowlists.)
-
-**Milestone:** VNet/NSGs/PIP online; Effective rules look correct ✅
-
-
 **agents (`nsg-abc-agents`)** → attach to `subnet-agents`
 	security_rule {
 		name                       = "deny-vnet-inbound"
@@ -168,11 +161,23 @@
 		destination_address_prefix = "*"
 	}
 
+### 1.4 Static Public IP (for NAT reuse)
+
+
+### 1.4 NAT Gateway & Static Public IP (Outbound for Agents)
+
+
+- Create static public IP: `pip-abc-nat` (Standard, Static) in resource group `rg-abc-net`. Keep forever; preserves allowlists.
+- Create NAT Gateway: `natg-abc` in resource group `rg-abc-net`.
+- Associate `pip-abc-nat` to `natg-abc` as its public IP.
+- Associate `natg-abc` to `subnet-agents` for outbound internet access.
+
+**Milestone:** VNet, NSGs, NAT Gateway, and Static IP online; outbound rules and connectivity verified ✅
+
+
+
 - **Secrets to add (placeholders now if needed):**
-	- `GH_APP_ID`
-	- `GH_INSTALLATION_ID`
-	- `GH_PRIVATE_KEY` (PEM)
-	- `GH_WEBHOOK_SECRET`
+	 - GitHub_Token
 - Enable Soft delete & Purge protection.
 
 ### 2.3 Managed Identities
