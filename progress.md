@@ -34,6 +34,10 @@ This file tracks the progress of tasks from the target plan. Update this file as
   - Successfully deployed NSG for agents with correct outbound and inbound rules using `deploy.sh`.
   - Validated deployment: resources created as expected, no errors.
 
+**August 19, 2025:**
+  - Created static public IP (`pip-abc-nat`) in Azure using Terraform as per target plan.
+  - Verified resource group assignment and configuration.
+  - Deployment script ran successfully, resource provisioned and validated.
 ---
 
 ## Checklist vs Target Plan (as of August 18, 2025)
